@@ -1,13 +1,13 @@
 # QA LSTM with Attention
 
-This repo is the implements of QA-LSTM-with-Attention  model([Applying deep learning to answer selection: A study and an open task](https://ieeexplore.ieee.org/abstract/document/7404872)).
+This repo is the implements of QA-LSTM-with-Attention  model([LSTM-BASED DEEP LEARNING MODELS FOR NONFACTOID ANSWER SELECTION](https://arxiv.org/abs/1511.04108)).
 
 
 
 # Installation
 
 ```
-git clone https://github.com/Chiang97912/QACNN
+git clone https://github.com/Chiang97912/QA_LSTM_ATTENTION.git
 ```
 
 
