@@ -36,16 +36,16 @@ class QALSTM(object):
             # qtest_lstm = self.biLSTMCell(qtest_embed, self.rnn_size)
             # atest_lstm = self.biLSTMCell(atest_embed, self.rnn_size)
 
-        with tf.variable_scope("attention_wrapper", reuse=tf.AUTO_REUSE):
-            qp_atted, ap_atted = self.attention_wrapper(q_lstm, ap_lstm)
-            qn_atted, an_atted = self.attention_wrapper(q_lstm, an_lstm)
+        with tf.variable_scope("attention_encoder", reuse=tf.AUTO_REUSE):
+            qp_atted, ap_atted = self.attention_encoder(q_lstm, ap_lstm)
+            qn_atted, an_atted = self.attention_encoder(q_lstm, an_lstm)
 
         self.poscosine = self.calc_cosine(qp_atted, ap_atted)
         self.negcosine = self.calc_cosine(qn_atted, an_atted)
         self.loss, self.acc = self.calc_loss_and_acc(self.poscosine, self.negcosine)
         self.train_op = tf.train.AdamOptimizer(self.lr).minimize(self.loss)
 
-        # qtest_atted, atest_atted = self.attention_wrapper(qtest_lstm, atest_lstm)
+        # qtest_atted, atest_atted = self.attention_encoder(qtest_lstm, atest_lstm)
         # self.scores = self.calc_cosine(qtest_atted, atest_atted)
 
     def biLSTMCell(self, x, hidden_size):
@@ -73,7 +73,7 @@ class QALSTM(object):
 
         return output
 
-    def attention_wrapper(self, input_q, input_a):
+    def attention_encoder(self, input_q, input_a):
         # h_q = int(input_q.get_shape()[1])  # length of question
         w = int(input_q.get_shape()[2])  # length of input for one step
         h_a = int(input_a.get_shape()[1])  # length of answer
