@@ -63,10 +63,10 @@ def load_train_data(filename, all_answers, voc, word2idx, seq_size):
     for line in open(filename):
         qsent, ids = line.strip().split('\t')
         ids = [int(_id) for _id in ids.split(' ')]
+        question = [voc[idx] for idx in qsent.split(' ')]
+        question = encode_sent(question, word2idx, seq_size)
         for _id in ids:
-            question = [voc[idx] for idx in qsent.split(' ')]
-            question = encode_sent(question, word2idx, seq_size)
-            for i in range(4):
+            for i in range(50):
                 questions.append(question)
                 pos_answer = encode_sent(all_answers[_id], word2idx, seq_size)
                 pos_answers.append(pos_answer)
@@ -76,11 +76,41 @@ def load_train_data(filename, all_answers, voc, word2idx, seq_size):
     return np.array(questions), np.array(pos_answers), np.array(neg_answers)
 
 
+def load_test_data(filename, all_answers, voc, word2idx, seq_size):
+    questions, answers, labels, qids, aids = [], [], [], [], []
+    qid = 0
+    for line in open(filename):
+        apids, qsent, anids = line.strip().split('\t')
+        apids = [int(_id) for _id in apids.split(' ')]
+        anids = [int(_id) for _id in anids.split(' ')]
+        question = [voc[idx] for idx in qsent.split(' ')]
+        question = encode_sent(question, word2idx, seq_size)
+        aid = 0
+        for _id in apids:
+            questions.append(question)
+            answer = encode_sent(all_answers[_id], word2idx, seq_size)
+            answers.append(answer)
+            labels.append(1)
+            qids.append(qid)
+            aids.append(aid)
+            aid += 1
+        for _id in anids:
+            questions.append(question)
+            answer = encode_sent(all_answers[_id], word2idx, seq_size)
+            answers.append(answer)
+            labels.append(0)
+            qids.append(qid)
+            aids.append(aid)
+            aid += 1
+        qid += 1
+    return np.array(questions), np.array(answers), np.array(labels), np.array(qids), np.array(aids)
+
+
 def batch_iter(questions, pos_answers, neg_answers, batch_size):
     data_size = len(questions)
-    batch_num = int(data_size/batch_size)
+    batch_num = int(data_size / batch_size)
     for batch in range(batch_num):
-        result_questions, result_pos_answers, result_neg_answers = [],[],[]
+        result_questions, result_pos_answers, result_neg_answers = [], [], []
         for i in range(batch * batch_size, min((batch + 1) * batch_size, data_size)):
             result_questions.append(questions[i])
             result_pos_answers.append(pos_answers[i])
@@ -88,8 +118,20 @@ def batch_iter(questions, pos_answers, neg_answers, batch_size):
         yield result_questions, result_pos_answers, result_neg_answers
 
 
+def test_batch_iter(questions, answers, batch_size):
+    data_size = len(questions)
+    batch_num = int(data_size / batch_size)
+    for batch in range(batch_num):
+        result_questions, result_answers = [], []
+        for i in range(batch * batch_size, min((batch + 1) * batch_size, data_size)):
+            result_questions.append(questions[i])
+            result_answers.append(answers[i])
+        yield result_questions, result_answers
+
+
 if __name__ == '__main__':
     embeddings, word2idx = load_embedding('vectors.nobin')
     voc = load_vocab('D:\\DataMining\\Datasets\\insuranceQA\\V1\\vocabulary')
     all_answers = load_answers('D:\\DataMining\\Datasets\\insuranceQA\\V1\\answers.label.token_idx', voc)
-    questions, pos_answers, neg_answers = load_train_data('D:\\DataMining\\Datasets\\insuranceQA\\V1\\question.train.token_idx.label', all_answers, voc, word2idx, 100)
+    # questions, pos_answers, neg_answers = load_train_data('D:\\DataMining\\Datasets\\insuranceQA\\V1\\question.train.token_idx.label', all_answers, voc, word2idx, 100)
+    questions, answers, labels, qids = load_test_data('D:\\DataMining\\Datasets\\insuranceQA\\V1\\question.test1.label.token_idx.pool', all_answers, voc, word2idx, 100)

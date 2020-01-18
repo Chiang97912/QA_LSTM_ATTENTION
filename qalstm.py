@@ -26,15 +26,15 @@ class QALSTM(object):
             q_embed = tf.nn.embedding_lookup(embeddings, self.q)
             ap_embed = tf.nn.embedding_lookup(embeddings, self.ap)
             an_embed = tf.nn.embedding_lookup(embeddings, self.an)
-            # qtest_embed = tf.nn.embedding_lookup(embeddings, self.qtest)
-            # atest_embed = tf.nn.embedding_lookup(embeddings, self.atest)
+            qtest_embed = tf.nn.embedding_lookup(embeddings, self.qtest)
+            atest_embed = tf.nn.embedding_lookup(embeddings, self.atest)
 
         with tf.variable_scope("bilstm", reuse=tf.AUTO_REUSE):
-            q_lstm = self.biLSTMCell(q_embed, self.rnn_size)
-            ap_lstm = self.biLSTMCell(ap_embed, self.rnn_size)
-            an_lstm = self.biLSTMCell(an_embed, self.rnn_size)
-            # qtest_lstm = self.biLSTMCell(qtest_embed, self.rnn_size)
-            # atest_lstm = self.biLSTMCell(atest_embed, self.rnn_size)
+            q_lstm = self.bidirectional_lstm(q_embed, self.rnn_size)
+            ap_lstm = self.bidirectional_lstm(ap_embed, self.rnn_size)
+            an_lstm = self.bidirectional_lstm(an_embed, self.rnn_size)
+            qtest_lstm = self.bidirectional_lstm(qtest_embed, self.rnn_size)
+            atest_lstm = self.bidirectional_lstm(atest_embed, self.rnn_size)
 
         with tf.variable_scope("attention_encoder", reuse=tf.AUTO_REUSE):
             qp_atted, ap_atted = self.attention_encoder(q_lstm, ap_lstm)
@@ -45,10 +45,10 @@ class QALSTM(object):
         self.loss, self.acc = self.calc_loss_and_acc(self.poscosine, self.negcosine)
         self.train_op = tf.train.AdamOptimizer(self.lr).minimize(self.loss)
 
-        # qtest_atted, atest_atted = self.attention_encoder(qtest_lstm, atest_lstm)
-        # self.scores = self.calc_cosine(qtest_atted, atest_atted)
+        qtest_atted, atest_atted = self.attention_encoder(qtest_lstm, atest_lstm)
+        self.scores = self.calc_cosine(qtest_atted, atest_atted)
 
-    def biLSTMCell(self, x, hidden_size):
+    def bidirectional_lstm(self, x, hidden_size):
         input_x = tf.transpose(x, [1, 0, 2])
         input_x = tf.unstack(input_x)
         lstm_fw_cell = tf.contrib.rnn.BasicLSTMCell(hidden_size, forget_bias=1.0, state_is_tuple=True)
